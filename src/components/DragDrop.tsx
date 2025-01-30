@@ -1,50 +1,6 @@
 import React, { useState } from "react";
+import { fileIcons } from "../utils/sortingUtils";
 
-// File Icons Mapping
-const fileIcons: { [key: string]: string } = {
-  mp3: "🎵",
-  wav: "🎵",
-  flac: "🎵",
-  docx: "📄",
-  pdf: "📕",
-  txt: "📝",
-  xls: "📊",
-  xlsx: "📊",
-  ppt: "📊",
-  pptx: "📊",
-  mp4: "🎬",
-  mov: "🎬",
-  avi: "🎬",
-  jpg: "🖼️",
-  png: "🖼️",
-  gif: "🖼️",
-  svg: "🖼️",
-  default: "📁",
-};
-
-// File Categories Mapping
-const fileCategories: { [key: string]: string } = {
-  mp3: "Music",
-  wav: "Music",
-  flac: "Music",
-  docx: "Documents",
-  pdf: "Documents",
-  txt: "Documents",
-  xls: "Documents",
-  xlsx: "Documents",
-  ppt: "Documents",
-  pptx: "Documents",
-  mp4: "Videos",
-  mov: "Videos",
-  avi: "Videos",
-  jpg: "Images",
-  png: "Images",
-  gif: "Images",
-  svg: "Images",
-  default: "Others",
-};
-
-// Drag and Drop Component with sorting and remove functionality
 const DragDrop = () => {
   const [dragging, setDragging] = useState(false);
   const [sortedFiles, setSortedFiles] = useState<
@@ -65,25 +21,15 @@ const DragDrop = () => {
     setDragging(false);
     const droppedFiles = Array.from(event.dataTransfer.files);
 
-    const categorizedFiles = droppedFiles.map((file) => {
-      const fileExt = file.name.split(".").pop()?.toLowerCase() || "default";
-      const category = fileCategories[fileExt] || fileCategories["default"];
-      return { file, category };
-    });
-
-    setSortedFiles([...sortedFiles, ...categorizedFiles]);
+    setSortedFiles([
+      ...sortedFiles,
+      ...droppedFiles.map((file) => ({ file, category: "Unsorted" })),
+    ]);
   };
 
   const removeFile = (indexToRemove: number) => {
     setSortedFiles(sortedFiles.filter((_, index) => index !== indexToRemove));
   };
-
-  // Group files by category
-  const groupedFiles = sortedFiles.reduce((acc, file, index) => {
-    acc[file.category] = acc[file.category] || [];
-    acc[file.category].push({ ...file, index });
-    return acc;
-  }, {} as { [key: string]: { file: File; category: string; index: number }[] });
 
   return (
     <div
@@ -97,39 +43,28 @@ const DragDrop = () => {
       {sortedFiles.length === 0 ? (
         "Drag and drop your files here"
       ) : (
-        <div className="w-full text-left space-y-4">
-          {Object.entries(groupedFiles).map(([category, files]) => (
-            <div key={category}>
-              <h3 className="text-lg font-semibold text-blue-700">
-                {category}
-              </h3>
-              <ul className="space-y-1">
-                {files.map(({ file, index }) => {
-                  const fileExt =
-                    file.name.split(".").pop()?.toLowerCase() || "default";
-                  const icon = fileIcons[fileExt] || fileIcons["default"];
-                  return (
-                    <li
-                      key={index}
-                      className="flex items-center gap-2 text-gray-700 text-sm justify-between"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="text-lg">{icon}</span>
-                        <span>{file.name}</span>
-                      </span>
-                      <button
-                        onClick={() => removeFile(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        ✖
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+        <ul className="w-full text-left space-y-2">
+          {sortedFiles.map(({ file, category }, index) => (
+            <li
+              key={index}
+              className="flex justify-between text-gray-700 text-sm"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-lg">
+                  {fileIcons[file.name.split(".").pop() || "default"]}
+                </span>
+                <span>{file.name}</span>
+              </span>
+              <span className="text-blue-500">→ {category}</span>
+              <button
+                onClick={() => removeFile(index)}
+                className="text-red-500 hover:text-red-700"
+              >
+                ✖
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
